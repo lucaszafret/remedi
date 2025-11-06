@@ -67,6 +67,30 @@ class Medicamento {
     return horarios;
   }
 
+  // Calcular horários de amanhã
+  List<DateTime> horariosAmanha() {
+    final agora = DateTime.now();
+    final amanha = DateTime(agora.year, agora.month, agora.day).add(const Duration(days: 1));
+    final horarios = <DateTime>[];
+
+    // Primeira dose de amanhã com a hora especificada
+    DateTime horario = DateTime(
+      amanha.year,
+      amanha.month,
+      amanha.day,
+      horarioPrimeiraDose.hour,
+      horarioPrimeiraDose.minute,
+    );
+
+    // Adicionar todos os horários de amanhã (24 horas)
+    while (horario.day == amanha.day) {
+      horarios.add(horario);
+      horario = horario.add(Duration(hours: intervaloHoras));
+    }
+
+    return horarios;
+  }
+
   // Copiar com modificações
   Medicamento copyWith({
     String? nome,

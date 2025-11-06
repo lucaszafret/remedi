@@ -127,7 +127,8 @@ class _MedicamentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final horarios = medicamento.horariosDodia();
+    final horariosHoje = medicamento.horariosDodia();
+    final horariosAmanha = medicamento.horariosAmanha();
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -200,19 +201,32 @@ class _MedicamentoCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Horários de hoje:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textLight,
-                    ),
+                  const SizedBox(height: 12),
+
+                  // Horários de hoje
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.today,
+                        size: 14,
+                        color: AppColors.textLight,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Hoje:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.text,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
-                    children: horarios.map((horario) {
+                    children: horariosHoje.map((horario) {
                       final isPast = horario.isBefore(DateTime.now());
                       return Chip(
                         label: Text(
@@ -227,6 +241,45 @@ class _MedicamentoCard extends StatelessWidget {
                         backgroundColor: isPast
                             ? AppColors.textLight.withValues(alpha: 0.1)
                             : AppColors.primary.withValues(alpha: 0.2),
+                        padding: EdgeInsets.zero,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Horários de amanhã
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: AppColors.textLight,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Amanhã:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.text,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: horariosAmanha.map((horario) {
+                      return Chip(
+                        label: Text(
+                          '${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        backgroundColor: AppColors.textLight.withValues(alpha: 0.15),
                         padding: EdgeInsets.zero,
                       );
                     }).toList(),
