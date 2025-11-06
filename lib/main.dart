@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'theme.dart';
+import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializar Hive
+  await Hive.initFlutter();
+
+  // Abrir a box de medicamentos
+  await Hive.openBox<Map>('medicamentos');
+
   runApp(const MainApp());
 }
 
@@ -9,12 +20,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return MaterialApp(
+      title: 'Remedi',
+      theme: AppTheme.theme,
+      debugShowCheckedModeBanner: false,
+      home: const HomeScreen(),
     );
   }
 }
