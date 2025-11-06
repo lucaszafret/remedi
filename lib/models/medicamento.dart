@@ -47,19 +47,24 @@ class Medicamento {
   List<DateTime> horariosDodia() {
     final agora = DateTime.now();
     final hoje = DateTime(agora.year, agora.month, agora.day);
+    final fimDodia = hoje.add(const Duration(days: 1));
     final horarios = <DateTime>[];
 
-    // Primeira dose do dia com a hora especificada
-    DateTime horario = DateTime(
-      hoje.year,
-      hoje.month,
-      hoje.day,
-      horarioPrimeiraDose.hour,
-      horarioPrimeiraDose.minute,
-    );
+    // Começar da primeira dose e ir adicionando intervalos
+    DateTime horario = horarioPrimeiraDose;
 
-    // Adicionar todos os horários do dia (24 horas)
-    while (horario.day == hoje.day) {
+    // Voltar até encontrar um horário antes de hoje
+    while (horario.isAfter(hoje)) {
+      horario = horario.subtract(Duration(hours: intervaloHoras));
+    }
+
+    // Avançar até o primeiro horário de hoje
+    while (horario.isBefore(hoje)) {
+      horario = horario.add(Duration(hours: intervaloHoras));
+    }
+
+    // Adicionar todos os horários de hoje
+    while (horario.isBefore(fimDodia)) {
       horarios.add(horario);
       horario = horario.add(Duration(hours: intervaloHoras));
     }
@@ -71,19 +76,24 @@ class Medicamento {
   List<DateTime> horariosAmanha() {
     final agora = DateTime.now();
     final amanha = DateTime(agora.year, agora.month, agora.day).add(const Duration(days: 1));
+    final fimAmanha = amanha.add(const Duration(days: 1));
     final horarios = <DateTime>[];
 
-    // Primeira dose de amanhã com a hora especificada
-    DateTime horario = DateTime(
-      amanha.year,
-      amanha.month,
-      amanha.day,
-      horarioPrimeiraDose.hour,
-      horarioPrimeiraDose.minute,
-    );
+    // Começar da primeira dose e ir adicionando intervalos
+    DateTime horario = horarioPrimeiraDose;
 
-    // Adicionar todos os horários de amanhã (24 horas)
-    while (horario.day == amanha.day) {
+    // Voltar até encontrar um horário antes de amanhã
+    while (horario.isAfter(amanha)) {
+      horario = horario.subtract(Duration(hours: intervaloHoras));
+    }
+
+    // Avançar até o primeiro horário de amanhã
+    while (horario.isBefore(amanha)) {
+      horario = horario.add(Duration(hours: intervaloHoras));
+    }
+
+    // Adicionar todos os horários de amanhã
+    while (horario.isBefore(fimAmanha)) {
       horarios.add(horario);
       horario = horario.add(Duration(hours: intervaloHoras));
     }
