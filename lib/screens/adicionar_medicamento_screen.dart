@@ -5,7 +5,9 @@ import '../services/medicamento_service.dart';
 import '../theme.dart';
 
 class AdicionarMedicamentoScreen extends StatefulWidget {
-  const AdicionarMedicamentoScreen({super.key});
+  final Medicamento? medicamento;
+
+  const AdicionarMedicamentoScreen({super.key, this.medicamento});
 
   @override
   State<AdicionarMedicamentoScreen> createState() =>
@@ -24,6 +26,24 @@ class _AdicionarMedicamentoScreenState
 
   TimeOfDay _horarioPrimeiraDose = const TimeOfDay(hour: 8, minute: 0);
 
+  bool get _isEdicao => widget.medicamento != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEdicao) {
+      final med = widget.medicamento!;
+      _nomeController.text = med.nome;
+      _dosagemController.text = med.dosagem;
+      _intervaloController.text = med.intervaloHoras.toString();
+      _quantidadeController.text = med.quantidadePorDose.toString();
+      _horarioPrimeiraDose = TimeOfDay(
+        hour: med.horarioPrimeiraDose.hour,
+        minute: med.horarioPrimeiraDose.minute,
+      );
+    }
+  }
+
   @override
   void dispose() {
     _nomeController.dispose();
@@ -37,7 +57,7 @@ class _AdicionarMedicamentoScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicionar Medicamento'),
+        title: Text(_isEdicao ? 'Editar Medicamento' : 'Adicionar Medicamento'),
       ),
       body: Form(
         key: _formKey,
@@ -148,7 +168,7 @@ class _AdicionarMedicamentoScreenState
             FilledButton.icon(
               onPressed: _salvar,
               icon: const Icon(Icons.check),
-              label: const Text('Salvar Medicamento'),
+              label: Text(_isEdicao ? 'Atualizar Medicamento' : 'Salvar Medicamento'),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.background,
@@ -201,7 +221,7 @@ class _AdicionarMedicamentoScreenState
     );
 
     final medicamento = Medicamento(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _isEdicao ? widget.medicamento!.id : DateTime.now().millisecondsSinceEpoch.toString(),
       nome: _nomeController.text,
       dosagem: _dosagemController.text,
       intervaloHoras: int.parse(_intervaloController.text),
@@ -209,13 +229,19 @@ class _AdicionarMedicamentoScreenState
       horarioPrimeiraDose: horarioPrimeiraDose,
     );
 
-    await _service.adicionar(medicamento);
+    if (_isEdicao) {
+      await _service.atualizar(medicamento);
+    } else {
+      await _service.adicionar(medicamento);
+    }
 
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Medicamento adicionado com sucesso!'),
+        SnackBar(
+          content: Text(_isEdicao
+              ? 'Medicamento atualizado com sucesso!'
+              : 'Medicamento adicionado com sucesso!'),
           backgroundColor: Colors.green,
         ),
       );

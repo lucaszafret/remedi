@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final medicamento = medicamentos[index];
               return _MedicamentoCard(
                 medicamento: medicamento,
+                onEdit: () => _editarMedicamento(medicamento),
                 onDelete: () => _confirmarExclusao(medicamento),
               );
             },
@@ -73,6 +74,17 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: AppColors.background),
+      ),
+    );
+  }
+
+  void _editarMedicamento(Medicamento medicamento) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdicionarMedicamentoScreen(
+          medicamento: medicamento,
+        ),
       ),
     );
   }
@@ -104,10 +116,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _MedicamentoCard extends StatelessWidget {
   final Medicamento medicamento;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _MedicamentoCard({
     required this.medicamento,
+    required this.onEdit,
     required this.onDelete,
   });
 
@@ -145,6 +159,11 @@ class _MedicamentoCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  color: AppColors.primary,
+                  onPressed: onEdit,
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline),
