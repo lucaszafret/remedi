@@ -101,6 +101,62 @@ class Medicamento {
     return horarios;
   }
 
+  // Calcular horários dos próximos 3 dias
+  Map<String, List<DateTime>> horariosProximos3Dias() {
+    final hoje = DateTime.now();
+    final resultado = <String, List<DateTime>>{};
+
+    for (int dia = 0; dia < 3; dia++) {
+      final data = DateTime(hoje.year, hoje.month, hoje.day).add(Duration(days: dia));
+      final proximoDia = data.add(const Duration(days: 1));
+      final horarios = <DateTime>[];
+
+      DateTime horario = horarioPrimeiraDose;
+
+      // Voltar até antes da data
+      while (horario.isAfter(data)) {
+        horario = horario.subtract(Duration(hours: intervaloHoras));
+      }
+
+      // Avançar até o primeiro horário da data
+      while (horario.isBefore(data)) {
+        horario = horario.add(Duration(hours: intervaloHoras));
+      }
+
+      // Adicionar todos os horários da data
+      while (horario.isBefore(proximoDia)) {
+        horarios.add(horario);
+        horario = horario.add(Duration(hours: intervaloHoras));
+      }
+
+      String label;
+      if (dia == 0) {
+        label = 'Hoje';
+      } else if (dia == 1) {
+        label = 'Amanhã';
+      } else {
+        label = 'Depois de amanhã';
+      }
+
+      resultado[label] = horarios;
+    }
+
+    return resultado;
+  }
+
+  // Obter próxima dose (futuro ou atual)
+  DateTime? proximaDose() {
+    final agora = DateTime.now();
+    DateTime horario = horarioPrimeiraDose;
+
+    // Avançar até encontrar um horário futuro ou atual
+    while (horario.isBefore(agora)) {
+      horario = horario.add(Duration(hours: intervaloHoras));
+    }
+
+    return horario;
+  }
+
   // Copiar com modificações
   Medicamento copyWith({
     String? nome,
