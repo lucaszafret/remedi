@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/medicamento.dart';
 import '../services/medicamento_service.dart';
+import '../services/notificacao_service.dart';
 import '../theme.dart';
 
 class AdicionarMedicamentoScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _AdicionarMedicamentoScreenState
     extends State<AdicionarMedicamentoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _service = MedicamentoService();
+  final _notificacaoService = NotificacaoService();
 
   final _nomeController = TextEditingController();
   final _dosagemController = TextEditingController();
@@ -234,6 +236,9 @@ class _AdicionarMedicamentoScreenState
     } else {
       await _service.adicionar(medicamento);
     }
+
+    // Agendar notificações
+    await _notificacaoService.agendarNotificacoesMedicamento(medicamento);
 
     if (mounted) {
       Navigator.pop(context);

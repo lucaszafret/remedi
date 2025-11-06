@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/medicamento.dart';
 import '../services/medicamento_service.dart';
 import '../services/dose_service.dart';
+import '../services/notificacao_service.dart';
 import '../theme.dart';
 import 'adicionar_medicamento_screen.dart';
 
@@ -15,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _service = MedicamentoService();
+  final _notificacaoService = NotificacaoService();
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirmar == true && mounted) {
+      // Cancelar notificações do medicamento
+      await _notificacaoService.cancelarNotificacoesMedicamento(medicamento.id);
+      // Remover medicamento
       await _service.remover(medicamento.id);
     }
   }

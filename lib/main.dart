@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
+import 'services/notificacao_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,9 @@ void main() async {
   // Abrir as boxes
   await Hive.openBox<Map>('medicamentos');
   await Hive.openBox<Map>('doses_tomadas');
+
+  // Inicializar notificações
+  await NotificacaoService().initialize();
 
   runApp(const MainApp());
 }
