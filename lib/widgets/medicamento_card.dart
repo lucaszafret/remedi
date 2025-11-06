@@ -1,0 +1,297 @@
+import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/medicamento.dart';
+import '../services/dose_service.dart';
+import '../services/medicamento_service.dart';
+import '../services/notificacao_service.dart';
+import '../theme.dart';
+import '../screens/adicionar_medicamento_screen.dart';
+import 'medicamento_detalhes_popup.dart';
+
+class MedicamentoCard extends StatelessWidget {
+  final Medicamento medicamento;
+
+  const MedicamentoCard({
+    super.key,
+    required this.medicamento,
+  });
+
+  String _formatarTempo(Duration duracao) {
+    if (duracao.isNegative) {
+      return 'Atrasado';
+    }
+
+    final horas = duracao.inHours;
+    final minutos = duracao.inMinutes.remainder(60);
+
+    if (horas > 0) {
+      return 'em ${horas}h ${minutos}min';
+    } else {
+      return 'em ${minutos}min';
+    }
+  }
+
+  Future<void> _marcarComoTomada(BuildContext context, DateTime horario) async {
+    await DoseService().marcarComoTomada(medicamento.id, horario);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Dose marcada como tomada'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _desmarcarDose(BuildContext context, DateTime horario) async {
+    await DoseService().desmarcarDose(medicamento.id, horario);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Dose desmarcada - toque novamente para marcar'),
+          backgroundColor: AppColors.textLight,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _editarMedicamento(BuildContext context) async {
+    final resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdicionarMedicamentoScreen(medicamento: medicamento),
+      ),
+    );
+
+    if (resultado == true && context.mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _removerMedicamento(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remover medicamento'),
+        content: Text('Deseja realmente remover ${medicamento.nome}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Remover'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true && context.mounted) {
+      await NotificacaoService().cancelarNotificacoesMedicamento(medicamento.id);
+      await MedicamentoService().deletar(medicamento.id);
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Medicamento removido'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _mostrarDetalhes(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => MedicamentoDetalhesPopup(
+        medicamento: medicamento,
+        onEditar: () => _editarMedicamento(context),
+        onRemover: () => _removerMedicamento(context),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: Hive.box<Map>('doses_tomadas').listenable(),
+      builder: (context, box, _) {
+        final proximaDose = medicamento.proximaDose();
+        final tempoRestante = proximaDose?.difference(DateTime.now());
+        final foiTomada = proximaDose != null && DoseService().foiTomada(medicamento.id, proximaDose);
+
+        return GestureDetector(
+          onTap: () => _mostrarDetalhes(context),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.medication,
+                        color: AppColors.primary,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            medicamento.nome,
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${medicamento.dosagem} • ${medicamento.quantidadePorDose}x por dose',
+                            style: const TextStyle(
+                              color: AppColors.textLight,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textLight,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Próxima dose',
+                              style: TextStyle(
+                                color: AppColors.textLight,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            if (proximaDose != null) ...[
+                              Text(
+                                '${proximaDose.hour.toString().padLeft(2, '0')}:${proximaDose.minute.toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                  color: AppColors.text,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (tempoRestante != null)
+                                Text(
+                                  _formatarTempo(tempoRestante),
+                                  style: TextStyle(
+                                    color: tempoRestante.isNegative ? AppColors.error : AppColors.textLight,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (proximaDose != null && !foiTomada)
+                        ElevatedButton(
+                          onPressed: () => _marcarComoTomada(context, proximaDose),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Tomei',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      else if (foiTomada)
+                        GestureDetector(
+                          onTap: () => _desmarcarDose(context, proximaDose),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Tomado',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

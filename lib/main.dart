@@ -13,6 +13,7 @@ void main() async {
   // Abrir as boxes
   await Hive.openBox<Map>('medicamentos');
   await Hive.openBox<Map>('doses_tomadas');
+  await Hive.openBox<Map>('configuracoes');
 
   // Inicializar notificações
   await NotificacaoService().initialize();

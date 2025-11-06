@@ -29,10 +29,15 @@ class DoseService {
   }
 
   // Obter todas as doses tomadas de um medicamento
-  List<DoseTomada> obterDosesTomadas(String medicamentoId) {
-    return _box.values
+  List<DoseTomada> obterDosesTomadas([String? medicamentoId]) {
+    final doses = _box.values
         .map((map) => DoseTomada.fromMap(Map<String, dynamic>.from(map)))
-        .where((dose) => dose.medicamentoId == medicamentoId)
         .toList();
+
+    if (medicamentoId != null) {
+      return doses.where((dose) => dose.medicamentoId == medicamentoId).toList();
+    }
+
+    return doses;
   }
 }

@@ -4,6 +4,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../models/medicamento.dart';
 import 'dose_service.dart';
+import 'configuracoes_service.dart';
 
 class NotificacaoService {
   static final NotificacaoService _instance = NotificacaoService._internal();
@@ -14,6 +15,7 @@ class NotificacaoService {
       FlutterLocalNotificationsPlugin();
 
   final DoseService _doseService = DoseService();
+  final ConfiguracoesService _configService = ConfiguracoesService();
 
   Future<void> initialize() async {
     // Inicializar timezone
@@ -111,33 +113,36 @@ class NotificacaoService {
     final medicamentoId = medicamento.id;
     final horarioTimestamp = horarioDose.millisecondsSinceEpoch;
 
-    // 30 minutos antes
-    final horario30min = horarioDose.subtract(const Duration(minutes: 30));
-    if (horario30min.isAfter(DateTime.now())) {
+    // Obter configurações
+    final config = await _configService.obterConfiguracoes();
+
+    // Primeira notificação (configurável, padrão 30 minutos)
+    final horario1 = horarioDose.subtract(Duration(minutes: config.minutosNotificacao1));
+    if (horario1.isAfter(DateTime.now())) {
       await _agendarNotificacao(
         id: int.parse('${horarioTimestamp}1'.substring(0, 9)),
         titulo: '⏰ Lembrete de Medicamento',
-        corpo: '${medicamento.nome} ${medicamento.dosagem} em 30 minutos\n${medicamento.quantidadePorDose} comprimido(s)',
-        horario: horario30min,
+        corpo: '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao1} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
+        horario: horario1,
         payload: '$medicamentoId|${horarioDose.toIso8601String()}',
         comAcao: false,
       );
     }
 
-    // 7 minutos antes
-    final horario7min = horarioDose.subtract(const Duration(minutes: 7));
-    if (horario7min.isAfter(DateTime.now())) {
+    // Segunda notificação (configurável, padrão 7 minutos)
+    final horario2 = horarioDose.subtract(Duration(minutes: config.minutosNotificacao2));
+    if (horario2.isAfter(DateTime.now())) {
       await _agendarNotificacao(
         id: int.parse('${horarioTimestamp}2'.substring(0, 9)),
         titulo: '⏰ Lembrete de Medicamento',
-        corpo: '${medicamento.nome} ${medicamento.dosagem} em 7 minutos\n${medicamento.quantidadePorDose} comprimido(s)',
-        horario: horario7min,
+        corpo: '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao2} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
+        horario: horario2,
         payload: '$medicamentoId|${horarioDose.toIso8601String()}',
         comAcao: false,
       );
     }
 
-    // 1 minuto antes - com ação
+    // 1 minuto antes - com ação (fixo)
     final horario1min = horarioDose.subtract(const Duration(minutes: 1));
     if (horario1min.isAfter(DateTime.now())) {
       await _agendarNotificacao(
