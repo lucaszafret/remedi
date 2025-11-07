@@ -28,6 +28,26 @@ class DoseService {
     await _box.delete(chave);
   }
 
+  // Editar horário em que a dose foi tomada
+  Future<void> editarHorarioTomado(String medicamentoId, DateTime horarioPrevisto, DateTime novoHorarioTomado) async {
+    final chave = '${medicamentoId}_${horarioPrevisto.millisecondsSinceEpoch}';
+    final dose = DoseTomada(
+      medicamentoId: medicamentoId,
+      horarioPrevisto: horarioPrevisto,
+      horarioTomado: novoHorarioTomado,
+    );
+    await _box.put(chave, dose.toMap());
+  }
+
+  // Obter horário em que a dose foi tomada
+  DateTime? obterHorarioTomado(String medicamentoId, DateTime horarioPrevisto) {
+    final chave = '${medicamentoId}_${horarioPrevisto.millisecondsSinceEpoch}';
+    final doseMap = _box.get(chave);
+    if (doseMap == null) return null;
+    final dose = DoseTomada.fromMap(Map<String, dynamic>.from(doseMap));
+    return dose.horarioTomado;
+  }
+
   // Obter todas as doses tomadas de um medicamento
   List<DoseTomada> obterDosesTomadas([String? medicamentoId]) {
     final doses = _box.values
