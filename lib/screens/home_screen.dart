@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../services/medicamento_service.dart';
@@ -19,6 +20,39 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _service = MedicamentoService();
   int _currentIndex = 0;
+  Timer? _minuteTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startMinuteTimer();
+  }
+
+  void _startMinuteTimer() {
+    // Cancela qualquer timer anterior
+    _minuteTimer?.cancel();
+
+    // Agendar o primeiro disparo exatamente no próximo limite de minuto
+    final now = DateTime.now();
+    final nextMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    ).add(const Duration(minutes: 1));
+    final firstDelay = nextMinute.difference(now);
+
+    // Primeiro timer único para alinhar ao início do minuto, depois periodic
+    _minuteTimer = Timer(firstDelay, () {
+      if (!mounted) return;
+      setState(() {});
+      _minuteTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (!mounted) return;
+        setState(() {});
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,10 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Nenhum medicamento cadastrado',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textLight,
-                  ),
+                  style: TextStyle(fontSize: 16, color: AppColors.textLight),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -106,5 +137,11 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _minuteTimer?.cancel();
+    super.dispose();
   }
 }
