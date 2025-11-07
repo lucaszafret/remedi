@@ -11,10 +11,7 @@ import 'medicamento_detalhes_popup.dart';
 class MedicamentoCard extends StatelessWidget {
   final Medicamento medicamento;
 
-  const MedicamentoCard({
-    super.key,
-    required this.medicamento,
-  });
+  const MedicamentoCard({super.key, required this.medicamento});
 
   String _formatarTempo(Duration duracao) {
     if (duracao.isNegative) {
@@ -63,7 +60,8 @@ class MedicamentoCard extends StatelessWidget {
     final resultado = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AdicionarMedicamentoScreen(medicamento: medicamento),
+        builder: (context) =>
+            AdicionarMedicamentoScreen(medicamento: medicamento),
       ),
     );
 
@@ -73,33 +71,59 @@ class MedicamentoCard extends StatelessWidget {
   }
 
   Future<void> _removerMedicamento(BuildContext context) async {
-    final confirmar = await showDialog<bool>(
+    // Mostrar opções: desativar (manter histórico) ou excluir completamente (remover histórico)
+    final escolha = await showDialog<String?>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remover medicamento'),
-        content: Text('Deseja realmente remover ${medicamento.nome}?'),
+        content: Text('O que deseja fazer com ${medicamento.nome}?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context, null),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(context, 'desativar'),
+            child: const Text('Desativar e manter histórico'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'deletar'),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Remover'),
+            child: const Text('Excluir completamente'),
           ),
         ],
       ),
     );
 
-    if (confirmar == true && context.mounted) {
-      await NotificacaoService().cancelarNotificacoesMedicamento(medicamento.id);
+    if (escolha == null) return; // Cancelado
+
+    // Cancelar notificações sempre
+    await NotificacaoService().cancelarNotificacoesMedicamento(medicamento.id);
+
+    if (escolha == 'desativar') {
+      // Marcar como inativo (manter histórico)
+      await MedicamentoService().remover(medicamento.id);
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Medicamento marcado como finalizado. Histórico mantido.',
+            ),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else if (escolha == 'deletar') {
+      // Deletar histórico e o medicamento
+      await DoseService().deletarHistoricoMedicamento(medicamento.id);
       await MedicamentoService().deletar(medicamento.id);
       if (context.mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Medicamento removido'),
+            content: Text('Medicamento e histórico removidos'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -128,7 +152,9 @@ class MedicamentoCard extends StatelessWidget {
       builder: (context, box, _) {
         final proximaDose = medicamento.proximaDose();
         final tempoRestante = proximaDose?.difference(DateTime.now());
-        final foiTomada = proximaDose != null && DoseService().foiTomada(medicamento.id, proximaDose);
+        final foiTomada =
+            proximaDose != null &&
+            DoseService().foiTomada(medicamento.id, proximaDose);
 
         return GestureDetector(
           onTap: () => _mostrarDetalhes(context),
@@ -188,10 +214,7 @@ class MedicamentoCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: AppColors.textLight,
-                    ),
+                    Icon(Icons.chevron_right, color: AppColors.textLight),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -228,7 +251,9 @@ class MedicamentoCard extends StatelessWidget {
                                 Text(
                                   _formatarTempo(tempoRestante),
                                   style: TextStyle(
-                                    color: tempoRestante.isNegative ? AppColors.error : AppColors.textLight,
+                                    color: tempoRestante.isNegative
+                                        ? AppColors.error
+                                        : AppColors.textLight,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -238,27 +263,32 @@ class MedicamentoCard extends StatelessWidget {
                       ),
                       if (proximaDose != null && !foiTomada)
                         ElevatedButton(
-                          onPressed: () => _marcarComoTomada(context, proximaDose),
+                          onPressed: () =>
+                              _marcarComoTomada(context, proximaDose),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: const Text(
                             'Tomei',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         )
                       else if (foiTomada)
                         GestureDetector(
                           onTap: () => _desmarcarDose(context, proximaDose),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),

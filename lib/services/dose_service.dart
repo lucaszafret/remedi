@@ -7,7 +7,10 @@ class DoseService {
   Box<Map> get _box => Hive.box<Map>(_boxName);
 
   // Marcar dose como tomada
-  Future<void> marcarComoTomada(String medicamentoId, DateTime horarioPrevisto) async {
+  Future<void> marcarComoTomada(
+    String medicamentoId,
+    DateTime horarioPrevisto,
+  ) async {
     final dose = DoseTomada(
       medicamentoId: medicamentoId,
       horarioPrevisto: horarioPrevisto,
@@ -23,13 +26,20 @@ class DoseService {
   }
 
   // Desmarcar dose
-  Future<void> desmarcarDose(String medicamentoId, DateTime horarioPrevisto) async {
+  Future<void> desmarcarDose(
+    String medicamentoId,
+    DateTime horarioPrevisto,
+  ) async {
     final chave = '${medicamentoId}_${horarioPrevisto.millisecondsSinceEpoch}';
     await _box.delete(chave);
   }
 
   // Editar horário em que a dose foi tomada
-  Future<void> editarHorarioTomado(String medicamentoId, DateTime horarioPrevisto, DateTime novoHorarioTomado) async {
+  Future<void> editarHorarioTomado(
+    String medicamentoId,
+    DateTime horarioPrevisto,
+    DateTime novoHorarioTomado,
+  ) async {
     final chave = '${medicamentoId}_${horarioPrevisto.millisecondsSinceEpoch}';
     final dose = DoseTomada(
       medicamentoId: medicamentoId,
@@ -55,9 +65,26 @@ class DoseService {
         .toList();
 
     if (medicamentoId != null) {
-      return doses.where((dose) => dose.medicamentoId == medicamentoId).toList();
+      return doses
+          .where((dose) => dose.medicamentoId == medicamentoId)
+          .toList();
     }
 
     return doses;
+  }
+
+  // Deletar todo o histórico de doses de um medicamento
+  Future<void> deletarHistoricoMedicamento(String medicamentoId) async {
+    final keysToDelete = <dynamic>[];
+    for (final entry in _box.toMap().entries) {
+      final map = Map<String, dynamic>.from(entry.value);
+      if (map['medicamentoId'] == medicamentoId) {
+        keysToDelete.add(entry.key);
+      }
+    }
+
+    if (keysToDelete.isNotEmpty) {
+      await _box.deleteAll(keysToDelete);
+    }
   }
 }
