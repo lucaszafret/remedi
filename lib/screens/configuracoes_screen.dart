@@ -56,10 +56,13 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
       // Obter todos os medicamentos ativos
       final medicamentos = medicamentoService.listarTodos();
 
-      // Reagendar notificações para cada medicamento
-      for (final medicamento in medicamentos) {
-        await notificacaoService.agendarNotificacoesMedicamento(medicamento);
-      }
+      // Reagendar notificações em paralelo (mais rápido)
+      await Future.wait(
+        medicamentos.map(
+          (medicamento) =>
+              notificacaoService.agendarNotificacoesMedicamento(medicamento),
+        ),
+      );
     } catch (e) {
       // Silenciosamente falhar se houver erro
       debugPrint('Erro ao reagendar notificações: $e');

@@ -79,9 +79,11 @@ class NotificacaoService {
     // Cancelar notificações antigas deste medicamento
     await cancelarNotificacoesMedicamento(medicamento.id);
 
-    // Agendar para os próximos 7 dias
+    // Agendar para os próximos 3 dias (otimizado)
     final hoje = DateTime.now();
-    for (int dia = 0; dia < 7; dia++) {
+    final futurosAgendamentos = <Future>[];
+
+    for (int dia = 0; dia < 3; dia++) {
       final data = DateTime(
         hoje.year,
         hoje.month,
@@ -104,11 +106,16 @@ class NotificacaoService {
       // Agendar notificações para cada horário do dia
       while (horario.isBefore(proximoDia)) {
         if (horario.isAfter(DateTime.now())) {
-          await _agendarNotificacoesParaDose(medicamento, horario);
+          futurosAgendamentos.add(
+            _agendarNotificacoesParaDose(medicamento, horario),
+          );
         }
         horario = horario.add(Duration(hours: medicamento.intervaloHoras));
       }
     }
+
+    // Aguardar todos os agendamentos em paralelo
+    await Future.wait(futurosAgendamentos);
   }
 
   Future<void> _agendarNotificacoesParaDose(
