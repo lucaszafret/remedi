@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/configuracoes.dart';
 import '../services/configuracoes_service.dart';
+import '../services/notificacao_service.dart';
+import '../services/medicamento_service.dart';
 import '../theme.dart';
 
 class ConfiguracoesScreen extends StatefulWidget {
@@ -30,10 +32,14 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
 
   Future<void> _salvarConfiguracoes() async {
     await _service.salvarConfiguracoes(_config);
+
+    // Reagendar todas as notificações com os novos horários
+    await _reagendarNotificacoes();
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Configurações salvas com sucesso'),
+          content: Text('Configurações salvas. Notificações atualizadas!'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
@@ -42,11 +48,31 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
     }
   }
 
+  Future<void> _reagendarNotificacoes() async {
+    try {
+      final notificacaoService = NotificacaoService();
+      final medicamentoService = MedicamentoService();
+
+      // Obter todos os medicamentos ativos
+      final medicamentos = medicamentoService.listarTodos();
+
+      // Reagendar notificações para cada medicamento
+      for (final medicamento in medicamentos) {
+        await notificacaoService.agendarNotificacoesMedicamento(medicamento);
+      }
+    } catch (e) {
+      // Silenciosamente falhar se houver erro
+      debugPrint('Erro ao reagendar notificações: $e');
+    }
+  }
+
   void _mostrarSeletorMinutos(bool isPrimeira) async {
     final minutos = await showDialog<int>(
       context: context,
       builder: (context) => _SeletorMinutosDialog(
-        minutosAtual: isPrimeira ? _config.minutosNotificacao1 : _config.minutosNotificacao2,
+        minutosAtual: isPrimeira
+            ? _config.minutosNotificacao1
+            : _config.minutosNotificacao2,
         titulo: isPrimeira ? 'Primeira notificação' : 'Segunda notificação',
       ),
     );
@@ -65,7 +91,24 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
           );
         }
       });
+
+      // Mostrar indicador de carregamento
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        );
+      }
+
       await _salvarConfiguracoes();
+
+      // Fechar indicador de carregamento
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -75,9 +118,7 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primary,
-          ),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       );
     }
@@ -102,10 +143,7 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
             padding: EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               'Configure os horários das notificações antes da hora de tomar o medicamento',
-              style: TextStyle(
-                color: AppColors.textLight,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppColors.textLight, fontSize: 14),
             ),
           ),
           const SizedBox(height: 16),
@@ -142,19 +180,12 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
+                  Icon(Icons.info_outline, color: AppColors.primary, size: 24),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'A última notificação sempre será 1 minuto antes e incluirá um botão para marcar como tomado',
-                      style: TextStyle(
-                        color: AppColors.text,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.text, fontSize: 13),
                     ),
                   ),
                 ],
@@ -192,10 +223,7 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
         ),
         subtitle: Text(
           descricao,
-          style: const TextStyle(
-            color: AppColors.textLight,
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: AppColors.textLight, fontSize: 14),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -210,10 +238,7 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
             ),
             if (!isFixo) ...[
               const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                color: AppColors.textLight,
-              ),
+              Icon(Icons.chevron_right, color: AppColors.textLight),
             ],
           ],
         ),

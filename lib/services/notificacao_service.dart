@@ -23,7 +23,9 @@ class NotificacaoService {
     tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
 
     // Configurações Android
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
 
     // Configurações iOS
     const iosSettings = DarwinInitializationSettings(
@@ -49,21 +51,19 @@ class NotificacaoService {
   Future<void> _requestPermissions() async {
     await _notifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
 
     await _notifications
         .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
   void _onNotificationTap(NotificationResponse response) {
-    // Quando clicar na notificação de 1 minuto, marcar como tomada
+    // Apenas marcar como tomada se for a ação específica "marcar_tomada"
     if (response.payload != null && response.actionId == 'marcar_tomada') {
       final parts = response.payload!.split('|');
       if (parts.length == 2) {
@@ -72,6 +72,7 @@ class NotificacaoService {
         _doseService.marcarComoTomada(medicamentoId, horarioPrevisto);
       }
     }
+    // Clicar na notificação apenas abre o app (sem marcar como tomado)
   }
 
   Future<void> agendarNotificacoesMedicamento(Medicamento medicamento) async {
@@ -81,7 +82,11 @@ class NotificacaoService {
     // Agendar para os próximos 7 dias
     final hoje = DateTime.now();
     for (int dia = 0; dia < 7; dia++) {
-      final data = DateTime(hoje.year, hoje.month, hoje.day).add(Duration(days: dia));
+      final data = DateTime(
+        hoje.year,
+        hoje.month,
+        hoje.day,
+      ).add(Duration(days: dia));
       final proximoDia = data.add(const Duration(days: 1));
 
       DateTime horario = medicamento.horarioPrimeiraDose;
@@ -111,18 +116,25 @@ class NotificacaoService {
     DateTime horarioDose,
   ) async {
     final medicamentoId = medicamento.id;
-    final horarioTimestamp = horarioDose.millisecondsSinceEpoch;
+
+    // Gerar IDs únicos baseados no hash do medicamentoId + horário + tipo
+    final baseId = '${medicamentoId}_${horarioDose.millisecondsSinceEpoch}'
+        .hashCode
+        .abs();
 
     // Obter configurações
     final config = await _configService.obterConfiguracoes();
 
     // Primeira notificação (configurável, padrão 30 minutos)
-    final horario1 = horarioDose.subtract(Duration(minutes: config.minutosNotificacao1));
+    final horario1 = horarioDose.subtract(
+      Duration(minutes: config.minutosNotificacao1),
+    );
     if (horario1.isAfter(DateTime.now())) {
       await _agendarNotificacao(
-        id: int.parse('${horarioTimestamp}1'.substring(0, 9)),
+        id: baseId + 1,
         titulo: '⏰ Lembrete de Medicamento',
-        corpo: '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao1} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
+        corpo:
+            '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao1} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
         horario: horario1,
         payload: '$medicamentoId|${horarioDose.toIso8601String()}',
         comAcao: false,
@@ -130,25 +142,29 @@ class NotificacaoService {
     }
 
     // Segunda notificação (configurável, padrão 7 minutos)
-    final horario2 = horarioDose.subtract(Duration(minutes: config.minutosNotificacao2));
+    final horario2 = horarioDose.subtract(
+      Duration(minutes: config.minutosNotificacao2),
+    );
     if (horario2.isAfter(DateTime.now())) {
       await _agendarNotificacao(
-        id: int.parse('${horarioTimestamp}2'.substring(0, 9)),
+        id: baseId + 2,
         titulo: '⏰ Lembrete de Medicamento',
-        corpo: '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao2} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
+        corpo:
+            '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao2} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
         horario: horario2,
         payload: '$medicamentoId|${horarioDose.toIso8601String()}',
         comAcao: false,
       );
     }
 
-    // 1 minuto antes - com ação (fixo)
+    // 1 minuto antes - com ação para marcar como tomado
     final horario1min = horarioDose.subtract(const Duration(minutes: 1));
     if (horario1min.isAfter(DateTime.now())) {
       await _agendarNotificacao(
-        id: int.parse('${horarioTimestamp}3'.substring(0, 9)),
+        id: baseId + 3,
         titulo: '💊 Hora do Medicamento!',
-        corpo: '${medicamento.nome} ${medicamento.dosagem} AGORA\n${medicamento.quantidadePorDose} comprimido(s)',
+        corpo:
+            '${medicamento.nome} ${medicamento.dosagem} AGORA\n${medicamento.quantidadePorDose} comprimido(s)',
         horario: horario1min,
         payload: '$medicamentoId|${horarioDose.toIso8601String()}',
         comAcao: true,
@@ -178,7 +194,7 @@ class NotificacaoService {
                 'marcar_tomada',
                 '✓ Tomei',
                 titleColor: Color(0xFF4CAF50),
-                showsUserInterface: false,
+                showsUserInterface: true, // Abre o app
               ),
             ]
           : null,
@@ -208,7 +224,8 @@ class NotificacaoService {
 
   Future<void> cancelarNotificacoesMedicamento(String medicamentoId) async {
     // Cancelar todas as notificações pendentes
-    final pendingNotifications = await _notifications.pendingNotificationRequests();
+    final pendingNotifications = await _notifications
+        .pendingNotificationRequests();
 
     for (final notification in pendingNotifications) {
       if (notification.payload?.startsWith(medicamentoId) ?? false) {
