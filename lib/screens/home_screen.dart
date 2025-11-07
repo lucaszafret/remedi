@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (diffMinutes >= 0 && diffMinutes <= 30) {
               upcoming.add({'med': med, 'horario': horario});
             } else if (diffMinutes < 0 &&
-                now.difference(horario).inMinutes >= 30) {
+                now.difference(horario).inMinutes <= 30) {
               missed.add({'med': med, 'horario': horario});
             }
           }
