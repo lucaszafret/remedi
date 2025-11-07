@@ -35,6 +35,14 @@ class MedicamentoDetalhesPopup extends StatelessWidget {
     }
   }
 
+  String _formatarDataCompleta(DateTime data) {
+    final meses = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ];
+    return '${data.day} ${meses[data.month - 1]} ${data.year}';
+  }
+
   Future<void> _marcarComoTomada(BuildContext context, DateTime horario) async {
     await DoseService().marcarComoTomada(medicamento.id, horario);
     if (context.mounted) {
@@ -75,7 +83,14 @@ class MedicamentoDetalhesPopup extends StatelessWidget {
 
         // Filtrar doses: remover doses passadas que já foram tomadas
         final agora = DateTime.now();
+        final dataFinal = medicamento.dataFinalTratamento();
+
         final dosesParaMostrar = todasDoses.where((horario) {
+          // Se há data final e a dose é depois dela, não mostrar
+          if (dataFinal != null && horario.isAfter(dataFinal)) {
+            return false;
+          }
+
           final isPast = horario.isBefore(agora);
           final foiTomada = DoseService().foiTomada(medicamento.id, horario);
 
@@ -85,7 +100,7 @@ class MedicamentoDetalhesPopup extends StatelessWidget {
           }
 
           // Mostrar todos os outros casos:
-          // - Doses futuras (tomadas ou não)
+          // - Doses futuras (tomadas ou não) até a data final
           // - Doses passadas que NÃO foram tomadas (perdidas)
           return true;
         }).toList();
@@ -152,6 +167,124 @@ class MedicamentoDetalhesPopup extends StatelessWidget {
               ],
             ),
           ),
+          if (medicamento.diasTratamento != null || medicamento.quantidadeTotal != null) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    if (medicamento.diasTratamento != null) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Duração: ${medicamento.diasTratamento} dias',
+                            style: TextStyle(
+                              color: AppColors.text,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.event_available,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Término: ${_formatarDataCompleta(medicamento.dataFinalTratamento()!)}',
+                              style: TextStyle(
+                                color: AppColors.text,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.medication,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Total necessário: ${medicamento.totalComprimidosNecessarios()} comprimidos',
+                            style: TextStyle(
+                              color: AppColors.text,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else if (medicamento.quantidadeTotal != null) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.inventory_2,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Total: ${medicamento.quantidadeTotal} comprimidos',
+                            style: TextStyle(
+                              color: AppColors.text,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Duração: ~${medicamento.diasPorQuantidade()} dias',
+                            style: TextStyle(
+                              color: AppColors.text,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           Container(
             constraints: BoxConstraints(

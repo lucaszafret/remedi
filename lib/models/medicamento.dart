@@ -6,6 +6,8 @@ class Medicamento {
   final int quantidadePorDose; // Ex: 1 (comprimido)
   final DateTime horarioPrimeiraDose; // Ex: 08:00
   final bool ativo;
+  final int? diasTratamento; // Duração em dias (null = contínuo)
+  final int? quantidadeTotal; // Total de comprimidos (null = contínuo)
 
   Medicamento({
     required this.id,
@@ -15,6 +17,8 @@ class Medicamento {
     required this.quantidadePorDose,
     required this.horarioPrimeiraDose,
     this.ativo = true,
+    this.diasTratamento,
+    this.quantidadeTotal,
   });
 
   // Converter para Map para salvar no Hive
@@ -27,6 +31,8 @@ class Medicamento {
       'quantidadePorDose': quantidadePorDose,
       'horarioPrimeiraDose': horarioPrimeiraDose.toIso8601String(),
       'ativo': ativo,
+      'diasTratamento': diasTratamento,
+      'quantidadeTotal': quantidadeTotal,
     };
   }
 
@@ -40,6 +46,8 @@ class Medicamento {
       quantidadePorDose: map['quantidadePorDose'] as int,
       horarioPrimeiraDose: DateTime.parse(map['horarioPrimeiraDose'] as String),
       ativo: map['ativo'] as bool? ?? true,
+      diasTratamento: map['diasTratamento'] as int?,
+      quantidadeTotal: map['quantidadeTotal'] as int?,
     );
   }
 
@@ -157,6 +165,41 @@ class Medicamento {
     return horario;
   }
 
+  // Calcular data final do tratamento
+  DateTime? dataFinalTratamento() {
+    if (diasTratamento == null) return null;
+    return horarioPrimeiraDose.add(Duration(days: diasTratamento!));
+  }
+
+  // Calcular total de doses no tratamento
+  int? totalDoses() {
+    if (diasTratamento == null) return null;
+    final dosesHorasPorDia = 24 / intervaloHoras;
+    return (diasTratamento! * dosesHorasPorDia).ceil();
+  }
+
+  // Calcular total de comprimidos necessários
+  int? totalComprimidosNecessarios() {
+    final doses = totalDoses();
+    if (doses == null) return null;
+    return doses * quantidadePorDose;
+  }
+
+  // Calcular dias de tratamento baseado na quantidade total
+  int? diasPorQuantidade() {
+    if (quantidadeTotal == null) return null;
+    final dosesHorasPorDia = 24 / intervaloHoras;
+    final totalDeDoses = quantidadeTotal! / quantidadePorDose;
+    return (totalDeDoses / dosesHorasPorDia).ceil();
+  }
+
+  // Verificar se o tratamento já terminou
+  bool tratamentoFinalizado() {
+    final dataFinal = dataFinalTratamento();
+    if (dataFinal == null) return false;
+    return DateTime.now().isAfter(dataFinal);
+  }
+
   // Copiar com modificações
   Medicamento copyWith({
     String? nome,
@@ -165,6 +208,8 @@ class Medicamento {
     int? quantidadePorDose,
     DateTime? horarioPrimeiraDose,
     bool? ativo,
+    int? diasTratamento,
+    int? quantidadeTotal,
   }) {
     return Medicamento(
       id: id,
@@ -174,6 +219,8 @@ class Medicamento {
       quantidadePorDose: quantidadePorDose ?? this.quantidadePorDose,
       horarioPrimeiraDose: horarioPrimeiraDose ?? this.horarioPrimeiraDose,
       ativo: ativo ?? this.ativo,
+      diasTratamento: diasTratamento ?? this.diasTratamento,
+      quantidadeTotal: quantidadeTotal ?? this.quantidadeTotal,
     );
   }
 }
