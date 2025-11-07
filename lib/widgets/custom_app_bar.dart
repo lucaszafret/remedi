@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../screens/arquivados_screen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -30,10 +31,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(6),
-            child: Image.asset(
-              'assets/images/remedi.png',
-              fit: BoxFit.contain,
-            ),
+            child: Image.asset('assets/images/remedi.png', fit: BoxFit.contain),
           ),
           const SizedBox(width: 12),
           Text(
@@ -42,6 +40,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               color: AppColors.text,
               fontSize: 20,
               fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            tooltip: 'Arquivados',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ArquivadosScreen()),
+              );
+            },
+            icon: Icon(
+              Icons.archive,
+              color: AppColors.textLight.withValues(alpha: 0.9),
             ),
           ),
         ],
