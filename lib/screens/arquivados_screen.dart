@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../services/medicamento_service.dart';
 import '../services/dose_service.dart';
+import '../services/notificacao_service.dart';
 import '../theme.dart';
 import '../models/medicamento.dart';
 
@@ -132,14 +133,82 @@ class ArquivadosScreen extends StatelessWidget {
                               onPressed: () async {
                                 final restored = med.copyWith(ativo: true);
                                 await service.atualizar(restored);
+
                                 if (context.mounted) {
+                                  // Mostrar notificação de progresso
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Medicamento restaurado'),
-                                      backgroundColor: Colors.green,
+                                    SnackBar(
+                                      content: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Expanded(
+                                            child: Text(
+                                              'Configurando notificações...',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      backgroundColor: AppColors.primary,
                                       behavior: SnackBarBehavior.floating,
+                                      duration: const Duration(seconds: 10),
                                     ),
                                   );
+
+                                  // Reagendar notificações em background
+                                  final notifService = NotificacaoService();
+                                  notifService
+                                      .agendarNotificacoesMedicamento(restored)
+                                      .then((_) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).hideCurrentSnackBar();
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Medicamento restaurado com sucesso!',
+                                              ),
+                                              backgroundColor: Colors.green,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              duration: Duration(seconds: 2),
+                                            ),
+                                          );
+                                        }
+                                      })
+                                      .catchError((error) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).hideCurrentSnackBar();
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Medicamento restaurado, mas erro ao configurar notificações',
+                                              ),
+                                              backgroundColor: Colors.orange,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              duration: Duration(seconds: 3),
+                                            ),
+                                          );
+                                        }
+                                      });
                                 }
                               },
                               icon: const Icon(Icons.restore, size: 20),

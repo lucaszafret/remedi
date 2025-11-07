@@ -9,11 +9,7 @@ class AdicionarMedicamentoScreen extends StatefulWidget {
   final Medicamento? medicamento;
   final VoidCallback? onSaved;
 
-  const AdicionarMedicamentoScreen({
-    super.key,
-    this.medicamento,
-    this.onSaved,
-  });
+  const AdicionarMedicamentoScreen({super.key, this.medicamento, this.onSaved});
 
   @override
   State<AdicionarMedicamentoScreen> createState() =>
@@ -388,13 +384,19 @@ class _AdicionarMedicamentoScreenState
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
                       ),
                       labelStyle: const TextStyle(color: AppColors.textLight),
-                      hintStyle: TextStyle(color: AppColors.textLight.withValues(alpha: 0.5)),
+                      hintStyle: TextStyle(
+                        color: AppColors.textLight.withValues(alpha: 0.5),
+                      ),
                     ),
                     validator: (value) {
-                      if (_tipoDuracao == 'dias' && (value == null || value.isEmpty)) {
+                      if (_tipoDuracao == 'dias' &&
+                          (value == null || value.isEmpty)) {
                         return 'Digite os dias de tratamento';
                       }
                       if (_tipoDuracao == 'dias') {
@@ -406,12 +408,16 @@ class _AdicionarMedicamentoScreenState
                       return null;
                     },
                     onChanged: (value) {
-                      if (value.isNotEmpty && _intervaloController.text.isNotEmpty && _quantidadeController.text.isNotEmpty) {
+                      if (value.isNotEmpty &&
+                          _intervaloController.text.isNotEmpty &&
+                          _quantidadeController.text.isNotEmpty) {
                         _calcularQuantidadePorDias();
                       }
                     },
                   ),
-                  if (_diasTratamentoController.text.isNotEmpty && _intervaloController.text.isNotEmpty && _quantidadeController.text.isNotEmpty)
+                  if (_diasTratamentoController.text.isNotEmpty &&
+                      _intervaloController.text.isNotEmpty &&
+                      _quantidadeController.text.isNotEmpty)
                     Container(
                       margin: const EdgeInsets.only(top: 12),
                       padding: const EdgeInsets.all(14),
@@ -435,7 +441,11 @@ class _AdicionarMedicamentoScreenState
                               color: AppColors.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Icons.calculate, color: AppColors.primary, size: 18),
+                            child: Icon(
+                              Icons.calculate,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -481,7 +491,10 @@ class _AdicionarMedicamentoScreenState
                     decoration: InputDecoration(
                       labelText: 'Quantidade total de comprimidos',
                       hintText: 'Ex: 30',
-                      prefixIcon: Icon(Icons.inventory_2, color: AppColors.primary),
+                      prefixIcon: Icon(
+                        Icons.inventory_2,
+                        color: AppColors.primary,
+                      ),
                       filled: true,
                       fillColor: AppColors.primary.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
@@ -494,13 +507,19 @@ class _AdicionarMedicamentoScreenState
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
                       ),
                       labelStyle: const TextStyle(color: AppColors.textLight),
-                      hintStyle: TextStyle(color: AppColors.textLight.withValues(alpha: 0.5)),
+                      hintStyle: TextStyle(
+                        color: AppColors.textLight.withValues(alpha: 0.5),
+                      ),
                     ),
                     validator: (value) {
-                      if (_tipoDuracao == 'quantidade' && (value == null || value.isEmpty)) {
+                      if (_tipoDuracao == 'quantidade' &&
+                          (value == null || value.isEmpty)) {
                         return 'Digite a quantidade total';
                       }
                       if (_tipoDuracao == 'quantidade') {
@@ -512,12 +531,16 @@ class _AdicionarMedicamentoScreenState
                       return null;
                     },
                     onChanged: (value) {
-                      if (value.isNotEmpty && _intervaloController.text.isNotEmpty && _quantidadeController.text.isNotEmpty) {
+                      if (value.isNotEmpty &&
+                          _intervaloController.text.isNotEmpty &&
+                          _quantidadeController.text.isNotEmpty) {
                         _calcularDiasPorQuantidade();
                       }
                     },
                   ),
-                  if (_quantidadeTotalController.text.isNotEmpty && _intervaloController.text.isNotEmpty && _quantidadeController.text.isNotEmpty)
+                  if (_quantidadeTotalController.text.isNotEmpty &&
+                      _intervaloController.text.isNotEmpty &&
+                      _quantidadeController.text.isNotEmpty)
                     Container(
                       margin: const EdgeInsets.only(top: 12),
                       padding: const EdgeInsets.all(14),
@@ -541,7 +564,11 @@ class _AdicionarMedicamentoScreenState
                               color: AppColors.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Icons.calculate, color: AppColors.primary, size: 18),
+                            child: Icon(
+                              Icons.calculate,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -603,10 +630,15 @@ class _AdicionarMedicamentoScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(_isEdicao ? Icons.check_circle : Icons.add_circle, size: 24),
+                  Icon(
+                    _isEdicao ? Icons.check_circle : Icons.add_circle,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Text(
-                    _isEdicao ? 'Atualizar Medicamento' : 'Adicionar Medicamento',
+                    _isEdicao
+                        ? 'Atualizar Medicamento'
+                        : 'Adicionar Medicamento',
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -643,11 +675,7 @@ class _AdicionarMedicamentoScreenState
             color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 18,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 18),
         ),
         const SizedBox(width: 12),
         Text(
@@ -734,11 +762,15 @@ class _AdicionarMedicamentoScreenState
         fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.textLight.withValues(alpha: 0.2)),
+          borderSide: BorderSide(
+            color: AppColors.textLight.withValues(alpha: 0.2),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.textLight.withValues(alpha: 0.2)),
+          borderSide: BorderSide(
+            color: AppColors.textLight.withValues(alpha: 0.2),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -800,7 +832,9 @@ class _AdicionarMedicamentoScreenState
     final intervalo = int.tryParse(_intervaloController.text);
     final quantidadePorDose = int.tryParse(_quantidadeController.text);
 
-    if (quantidadeTotal == null || intervalo == null || quantidadePorDose == null) {
+    if (quantidadeTotal == null ||
+        intervalo == null ||
+        quantidadePorDose == null) {
       return '';
     }
 
@@ -847,7 +881,10 @@ class _AdicionarMedicamentoScreenState
   Future<void> _selecionarHorario() async {
     final horario = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: _dataHoraInicio.hour, minute: _dataHoraInicio.minute),
+      initialTime: TimeOfDay(
+        hour: _dataHoraInicio.hour,
+        minute: _dataHoraInicio.minute,
+      ),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -891,7 +928,9 @@ class _AdicionarMedicamentoScreenState
     }
 
     final medicamento = Medicamento(
-      id: _isEdicao ? widget.medicamento!.id : DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _isEdicao
+          ? widget.medicamento!.id
+          : DateTime.now().millisecondsSinceEpoch.toString(),
       nome: _nomeController.text,
       dosagem: _dosagemController.text,
       intervaloHoras: int.parse(_intervaloController.text),
@@ -907,7 +946,70 @@ class _AdicionarMedicamentoScreenState
       await _service.adicionar(medicamento);
     }
 
-    await _notificacaoService.agendarNotificacoesMedicamento(medicamento);
+    // Mostrar notificação de progresso
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Configurando notificações...')),
+            ],
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 10),
+        ),
+      );
+    }
+
+    // Agendar notificações em background
+    _notificacaoService
+        .agendarNotificacoesMedicamento(medicamento)
+        .then((_) {
+          if (mounted) {
+            // Remover notificação de progresso
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            // Mostrar sucesso
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _isEdicao
+                      ? 'Medicamento atualizado com sucesso!'
+                      : 'Medicamento adicionado com sucesso!',
+                ),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        })
+        .catchError((error) {
+          if (mounted) {
+            // Remover notificação de progresso
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            // Mostrar erro
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Erro ao configurar notificações'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        });
 
     if (mounted) {
       // Se for edição, volta para tela anterior
@@ -928,17 +1030,6 @@ class _AdicionarMedicamentoScreenState
 
         widget.onSaved?.call();
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isEdicao
-              ? 'Medicamento atualizado!'
-              : 'Medicamento adicionado!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
   }
 }

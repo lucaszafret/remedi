@@ -33,19 +33,81 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
   Future<void> _salvarConfiguracoes() async {
     await _service.salvarConfiguracoes(_config);
 
-    // Reagendar todas as notificações com os novos horários
-    await _reagendarNotificacoes();
-
+    // Mostrar notificação de progresso (não bloqueia o app)
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Configurações salvas. Notificações atualizadas!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Configurando notificações...')),
+            ],
+          ),
+          backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
+          duration: const Duration(
+            seconds: 10,
+          ), // Tempo suficiente para completar
         ),
       );
     }
+
+    // Reagendar em background (não bloqueia a UI)
+    _reagendarNotificacoes()
+        .then((_) {
+          if (mounted) {
+            // Remover a notificação de progresso
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            // Mostrar confirmação de sucesso
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text('Notificações configuradas com sucesso!'),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        })
+        .catchError((error) {
+          if (mounted) {
+            // Remover a notificação de progresso
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            // Mostrar erro se houver
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.error, color: Colors.white),
+                    SizedBox(width: 12),
+                    Expanded(child: Text('Erro ao configurar notificações')),
+                  ],
+                ),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        });
   }
 
   Future<void> _reagendarNotificacoes() async {
@@ -95,23 +157,8 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
         }
       });
 
-      // Mostrar indicador de carregamento
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-        );
-      }
-
-      await _salvarConfiguracoes();
-
-      // Fechar indicador de carregamento
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      // Salvar e reagendar em background
+      _salvarConfiguracoes();
     }
   }
 

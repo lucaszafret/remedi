@@ -76,106 +76,134 @@ class NotificacaoService {
   }
 
   Future<void> agendarNotificacoesMedicamento(Medicamento medicamento) async {
-    // Cancelar notificações antigas deste medicamento
-    await cancelarNotificacoesMedicamento(medicamento.id);
+    try {
+      // Cancelar notificações antigas deste medicamento
+      await cancelarNotificacoesMedicamento(medicamento.id);
 
-    // Agendar para os próximos 3 dias (otimizado)
-    final hoje = DateTime.now();
-    final futurosAgendamentos = <Future>[];
+      // Agendar apenas para os próximos 2 dias (ainda mais leve)
+      final agora = DateTime.now();
+      final dataInicio = DateTime(agora.year, agora.month, agora.day);
+      final dataFim = dataInicio.add(const Duration(days: 2));
 
-    for (int dia = 0; dia < 3; dia++) {
-      final data = DateTime(
-        hoje.year,
-        hoje.month,
-        hoje.day,
-      ).add(Duration(days: dia));
-      final proximoDia = data.add(const Duration(days: 1));
-
+      final futurosAgendamentos = <Future>[];
       DateTime horario = medicamento.horarioPrimeiraDose;
 
-      // Voltar até antes da data
-      while (horario.isAfter(data)) {
-        horario = horario.subtract(Duration(hours: medicamento.intervaloHoras));
+      // Encontrar o primeiro horário futuro de forma mais eficiente
+      final diferencaEmHoras = agora.difference(horario).inHours;
+      if (diferencaEmHoras > 0) {
+        final ciclos = (diferencaEmHoras / medicamento.intervaloHoras).ceil();
+        horario = horario.add(
+          Duration(hours: ciclos * medicamento.intervaloHoras),
+        );
       }
 
-      // Avançar até o primeiro horário da data
-      while (horario.isBefore(data)) {
-        horario = horario.add(Duration(hours: medicamento.intervaloHoras));
-      }
+      // Limitar a 20 notificações por medicamento (segurança)
+      int contador = 0;
+      const maxNotificacoes = 20;
 
-      // Agendar notificações para cada horário do dia
-      while (horario.isBefore(proximoDia)) {
-        if (horario.isAfter(DateTime.now())) {
+      // Agendar notificações futuras até o limite de 2 dias
+      while (horario.isBefore(dataFim) && contador < maxNotificacoes) {
+        if (horario.isAfter(agora)) {
           futurosAgendamentos.add(
             _agendarNotificacoesParaDose(medicamento, horario),
           );
+          contador++;
         }
         horario = horario.add(Duration(hours: medicamento.intervaloHoras));
       }
-    }
 
-    // Aguardar todos os agendamentos em paralelo
-    await Future.wait(futurosAgendamentos);
+      // Aguardar todos os agendamentos em paralelo (com timeout)
+      await Future.wait(futurosAgendamentos).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint(
+            'Timeout ao agendar notificações para ${medicamento.nome}',
+          );
+          return [];
+        },
+      );
+    } catch (e) {
+      debugPrint('Erro ao agendar notificações para ${medicamento.nome}: $e');
+      // Não propagar erro para não travar o app
+    }
   }
 
   Future<void> _agendarNotificacoesParaDose(
     Medicamento medicamento,
     DateTime horarioDose,
   ) async {
-    final medicamentoId = medicamento.id;
+    try {
+      final medicamentoId = medicamento.id;
 
-    // Gerar IDs únicos baseados no hash do medicamentoId + horário + tipo
-    final baseId = '${medicamentoId}_${horarioDose.millisecondsSinceEpoch}'
-        .hashCode
-        .abs();
+      // Gerar IDs únicos baseados no hash do medicamentoId + horário + tipo
+      final baseId = '${medicamentoId}_${horarioDose.millisecondsSinceEpoch}'
+          .hashCode
+          .abs();
 
-    // Obter configurações
-    final config = await _configService.obterConfiguracoes();
+      // Obter configurações uma única vez
+      final config = await _configService.obterConfiguracoes();
+      final agora = DateTime.now();
+      final agendamentos = <Future>[];
 
-    // Primeira notificação (configurável, padrão 30 minutos)
-    final horario1 = horarioDose.subtract(
-      Duration(minutes: config.minutosNotificacao1),
-    );
-    if (horario1.isAfter(DateTime.now())) {
-      await _agendarNotificacao(
-        id: baseId + 1,
-        titulo: '⏰ Lembrete de Medicamento',
-        corpo:
-            '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao1} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
-        horario: horario1,
-        payload: '$medicamentoId|${horarioDose.toIso8601String()}',
-        comAcao: false,
+      // Primeira notificação (configurável, padrão 30 minutos)
+      final horario1 = horarioDose.subtract(
+        Duration(minutes: config.minutosNotificacao1),
       );
-    }
+      if (horario1.isAfter(agora)) {
+        agendamentos.add(
+          _agendarNotificacao(
+            id: baseId + 1,
+            titulo: '⏰ Lembrete de Medicamento',
+            corpo:
+                '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao1} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
+            horario: horario1,
+            payload: '$medicamentoId|${horarioDose.toIso8601String()}',
+            comAcao: false,
+          ),
+        );
+      }
 
-    // Segunda notificação (configurável, padrão 7 minutos)
-    final horario2 = horarioDose.subtract(
-      Duration(minutes: config.minutosNotificacao2),
-    );
-    if (horario2.isAfter(DateTime.now())) {
-      await _agendarNotificacao(
-        id: baseId + 2,
-        titulo: '⏰ Lembrete de Medicamento',
-        corpo:
-            '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao2} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
-        horario: horario2,
-        payload: '$medicamentoId|${horarioDose.toIso8601String()}',
-        comAcao: false,
+      // Segunda notificação (configurável, padrão 7 minutos)
+      final horario2 = horarioDose.subtract(
+        Duration(minutes: config.minutosNotificacao2),
       );
-    }
+      if (horario2.isAfter(agora)) {
+        agendamentos.add(
+          _agendarNotificacao(
+            id: baseId + 2,
+            titulo: '⏰ Lembrete de Medicamento',
+            corpo:
+                '${medicamento.nome} ${medicamento.dosagem} em ${config.minutosNotificacao2} minutos\n${medicamento.quantidadePorDose} comprimido(s)',
+            horario: horario2,
+            payload: '$medicamentoId|${horarioDose.toIso8601String()}',
+            comAcao: false,
+          ),
+        );
+      }
 
-    // 1 minuto antes - com ação para marcar como tomado
-    final horario1min = horarioDose.subtract(const Duration(minutes: 1));
-    if (horario1min.isAfter(DateTime.now())) {
-      await _agendarNotificacao(
-        id: baseId + 3,
-        titulo: '💊 Hora do Medicamento!',
-        corpo:
-            '${medicamento.nome} ${medicamento.dosagem} AGORA\n${medicamento.quantidadePorDose} comprimido(s)',
-        horario: horario1min,
-        payload: '$medicamentoId|${horarioDose.toIso8601String()}',
-        comAcao: true,
-      );
+      // 1 minuto antes - com ação para marcar como tomado
+      final horario1min = horarioDose.subtract(const Duration(minutes: 1));
+      if (horario1min.isAfter(agora)) {
+        agendamentos.add(
+          _agendarNotificacao(
+            id: baseId + 3,
+            titulo: '💊 Hora do Medicamento!',
+            corpo:
+                '${medicamento.nome} ${medicamento.dosagem} AGORA\n${medicamento.quantidadePorDose} comprimido(s)',
+            horario: horario1min,
+            payload: '$medicamentoId|${horarioDose.toIso8601String()}',
+            comAcao: true,
+          ),
+        );
+      }
+
+      // Agendar todas as notificações dessa dose em paralelo
+      if (agendamentos.isNotEmpty) {
+        await Future.wait(agendamentos);
+      }
+    } catch (e) {
+      debugPrint('Erro ao agendar dose: $e');
+      // Não propagar erro
     }
   }
 
