@@ -167,22 +167,38 @@ class Medicamento {
 
   // Calcular data final do tratamento
   DateTime? dataFinalTratamento() {
-    if (diasTratamento == null) return null;
-    return horarioPrimeiraDose.add(Duration(days: diasTratamento!));
+    if (diasTratamento != null) {
+      return horarioPrimeiraDose.add(Duration(days: diasTratamento!));
+    } else if (quantidadeTotal != null) {
+      // Calcular data final baseada na quantidade total
+      final totalDoses = (quantidadeTotal! / quantidadePorDose).ceil();
+      final horasTotal = (totalDoses - 1) * intervaloHoras; // -1 porque começa da primeira dose
+      return horarioPrimeiraDose.add(Duration(hours: horasTotal));
+    }
+    return null;
   }
 
   // Calcular total de doses no tratamento
   int? totalDoses() {
-    if (diasTratamento == null) return null;
-    final dosesHorasPorDia = 24 / intervaloHoras;
-    return (diasTratamento! * dosesHorasPorDia).ceil();
+    if (diasTratamento != null) {
+      final dosesHorasPorDia = 24 / intervaloHoras;
+      return (diasTratamento! * dosesHorasPorDia).ceil();
+    } else if (quantidadeTotal != null) {
+      return (quantidadeTotal! / quantidadePorDose).ceil();
+    }
+    return null;
   }
 
   // Calcular total de comprimidos necessários
   int? totalComprimidosNecessarios() {
-    final doses = totalDoses();
-    if (doses == null) return null;
-    return doses * quantidadePorDose;
+    if (diasTratamento != null) {
+      final doses = totalDoses();
+      if (doses == null) return null;
+      return doses * quantidadePorDose;
+    } else if (quantidadeTotal != null) {
+      return quantidadeTotal;
+    }
+    return null;
   }
 
   // Calcular dias de tratamento baseado na quantidade total
@@ -198,6 +214,89 @@ class Medicamento {
     final dataFinal = dataFinalTratamento();
     if (dataFinal == null) return false;
     return DateTime.now().isAfter(dataFinal);
+  }
+
+  // Calcular todas as doses do tratamento desde o início
+  List<DateTime> todasDosesTratamento() {
+    final doses = <DateTime>[];
+    final agora = DateTime.now();
+
+    // SEMPRE começar da primeira dose histórica
+    DateTime horario = horarioPrimeiraDose;
+    DateTime dataLimite;
+
+    if (diasTratamento != null) {
+      // Se tem duração definida em dias:
+      // Calcular baseado no número total de doses esperadas
+      final dosesHorasPorDia = 24 / intervaloHoras;
+      final totalDosesEsperadas = (diasTratamento! * dosesHorasPorDia).ceil();
+
+      // Adicionar todas as doses calculadas
+      for (int i = 0; i < totalDosesEsperadas; i++) {
+        doses.add(horario);
+        horario = horario.add(Duration(hours: intervaloHoras));
+      }
+    } else if (quantidadeTotal != null) {
+      // Se tem quantidade total definida:
+      // Calcular o número de doses baseado na quantidade total de comprimidos
+      final totalDosesEsperadas = (quantidadeTotal! / quantidadePorDose).ceil();
+
+      // Adicionar todas as doses calculadas
+      for (int i = 0; i < totalDosesEsperadas; i++) {
+        doses.add(horario);
+        horario = horario.add(Duration(hours: intervaloHoras));
+      }
+    } else {
+      // Se não tem data final (uso contínuo):
+      // Mostrar desde a primeira dose até hoje + 3 dias
+      final hoje = DateTime(agora.year, agora.month, agora.day);
+      dataLimite = hoje.add(const Duration(days: 3, hours: 23, minutes: 59));
+
+      // Adicionar todas as doses desde o início até o limite
+      while (horario.isBefore(dataLimite) || horario.isAtSameMomentAs(dataLimite)) {
+        doses.add(horario);
+        horario = horario.add(Duration(hours: intervaloHoras));
+      }
+    }
+
+    return doses;
+  }
+
+  // Calcular quantas doses já foram perdidas (passadas e não tomadas)
+  int dosesPerdidas() {
+    final agora = DateTime.now();
+    int perdidas = 0;
+
+    DateTime horario = horarioPrimeiraDose;
+    while (horario.isBefore(agora)) {
+      // Aqui precisaríamos acessar DoseService, mas não podemos no modelo
+      // Então este método será implementado no widget
+      horario = horario.add(Duration(hours: intervaloHoras));
+      perdidas++;
+    }
+
+    return perdidas;
+  }
+
+  // Calcular quantas doses faltam tomar
+  int dosesFaltam() {
+    final agora = DateTime.now();
+    final dataFinal = dataFinalTratamento();
+
+    if (dataFinal == null) {
+      // Contínuo - não tem fim
+      return -1;
+    }
+
+    int faltam = 0;
+    DateTime horario = agora;
+
+    while (horario.isBefore(dataFinal)) {
+      faltam++;
+      horario = horario.add(Duration(hours: intervaloHoras));
+    }
+
+    return faltam;
   }
 
   // Copiar com modificações
