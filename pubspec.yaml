@@ -1,7 +1,12 @@
 name: remedi
-description: "A new Flutter project."
+description: "App de lembrete de medicamentos"
 publish_to: 'none'
-version: 0.1.0
+
+# Sempre incremente a versão:
+# 1.0.1+2 (pequenos ajustes)
+# 1.1.0+3 (novas funcionalidades)
+# 2.0.0+4 (grandes mudanças)
+version: 1.0.0+1
 
 environment:
   sdk: ^3.9.2
@@ -33,3 +38,5 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/images/remedi.png"
+  adaptive_icon_foreground: "assets/images/remedi.png"
+  adaptive_icon_background: "#ffffff"

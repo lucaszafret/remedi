@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Keystore security
+/android/key.properties
+
+# Privacy policy hosting
+/privacy-police/
