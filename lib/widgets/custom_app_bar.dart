@@ -43,18 +43,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const Spacer(),
-          IconButton(
-            tooltip: 'Arquivados',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ArquivadosScreen()),
-              );
-            },
-            icon: Icon(
-              Icons.archive,
-              color: AppColors.textLight.withValues(alpha: 0.9),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.textLight.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: IconButton(
+              tooltip: 'Arquivados',
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ArquivadosScreen()),
+                );
+              },
+              icon: Icon(
+                Icons.archive_outlined,
+                color: AppColors.text,
+                size: 22,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
     );
