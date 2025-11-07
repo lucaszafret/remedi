@@ -131,7 +131,10 @@ class _HomeScreenState extends State<HomeScreen> {
         // Calcular notificações: próximas (<=30min) e perdidas (>30min)
         final now = DateTime.now();
         final doseService = DoseService();
-        final upcoming = <Map<String, dynamic>>[]; // {'med': Medicamento, 'horario': DateTime}
+        final upcoming =
+            <
+              Map<String, dynamic>
+            >[]; // {'med': Medicamento, 'horario': DateTime}
         final missed = <Map<String, dynamic>>[];
 
         for (final med in medicamentos) {
@@ -143,14 +146,16 @@ class _HomeScreenState extends State<HomeScreen> {
             final diffMinutes = horario.difference(now).inMinutes;
             if (diffMinutes >= 0 && diffMinutes <= 30) {
               upcoming.add({'med': med, 'horario': horario});
-            } else if (diffMinutes < 0 && now.difference(horario).inMinutes >= 30) {
+            } else if (diffMinutes < 0 &&
+                now.difference(horario).inMinutes >= 30) {
               missed.add({'med': med, 'horario': horario});
             }
           }
         }
 
         Widget buildBanner() {
-          if (upcoming.isEmpty && missed.isEmpty) return const SizedBox.shrink();
+          if (upcoming.isEmpty && missed.isEmpty)
+            return const SizedBox.shrink();
 
           return Container(
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -176,42 +181,64 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: Text(
                         'Notificações',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 if (missed.isNotEmpty) ...[
-                  Text('${missed.length} dose(s) perdida(s)', style: TextStyle(color: AppColors.text)),
+                  Text(
+                    '${missed.length} dose(s) perdida(s)',
+                    style: TextStyle(color: AppColors.text),
+                  ),
                   const SizedBox(height: 6),
                   ...missed.map((item) {
                     final med = item['med'];
                     final horario = item['horario'] as DateTime;
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.error_outline, color: Colors.redAccent),
-                      title: Text(med.nome, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')} — Atrasado'),
+                      leading: Icon(
+                        Icons.error_outline,
+                        color: Colors.redAccent,
+                      ),
+                      title: Text(
+                        med.nome,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')} — Atrasado',
+                      ),
                       trailing: ElevatedButton(
                         onPressed: () async {
                           await doseService.marcarComoTomada(med.id, horario);
                           if (context.mounted) {
                             setState(() {});
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Dose marcada como tomada'), backgroundColor: Colors.green),
+                              const SnackBar(
+                                content: Text('Dose marcada como tomada'),
+                                backgroundColor: Colors.green,
+                              ),
                             );
                           }
                         },
                         child: const Text('Tomar'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
                       ),
                     );
                   }).toList(),
                   const Divider(),
                 ],
                 if (upcoming.isNotEmpty) ...[
-                  Text('${upcoming.length} dose(s) para os próximos 30 minutos', style: TextStyle(color: AppColors.text)),
+                  Text(
+                    '${upcoming.length} dose(s) para os próximos 30 minutos',
+                    style: TextStyle(color: AppColors.text),
+                  ),
                   const SizedBox(height: 6),
                   ...upcoming.map((item) {
                     final med = item['med'];
@@ -219,15 +246,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(Icons.schedule, color: AppColors.primary),
-                      title: Text(med.nome, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')}'),
+                      title: Text(
+                        med.nome,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')}',
+                      ),
                       trailing: ElevatedButton(
                         onPressed: () async {
                           await doseService.marcarComoTomada(med.id, horario);
                           if (context.mounted) {
                             setState(() {});
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Dose marcada como tomada'), backgroundColor: Colors.green),
+                              const SnackBar(
+                                content: Text('Dose marcada como tomada'),
+                                backgroundColor: Colors.green,
+                              ),
                             );
                           }
                         },
@@ -245,7 +280,9 @@ class _HomeScreenState extends State<HomeScreen> {
         final children = <Widget>[];
         final banner = buildBanner();
         if (banner is! SizedBox) children.add(banner);
-        children.addAll(medicamentos.map((med) => MedicamentoCard(medicamento: med)));
+        children.addAll(
+          medicamentos.map((med) => MedicamentoCard(medicamento: med)),
+        );
 
         return ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
