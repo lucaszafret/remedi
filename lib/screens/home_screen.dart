@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
-        // Calcular notificações: próximas (<=30min) e perdidas (>30min)
+        // Calcular notificações: próximas (<=14min) e perdidas (>30min)
         final now = DateTime.now();
         final doseService = DoseService();
         final upcoming =
@@ -138,13 +138,18 @@ class _HomeScreenState extends State<HomeScreen> {
         final missed = <Map<String, dynamic>>[];
 
         for (final med in medicamentos) {
-          final horarios = med.horariosDodia();
-          for (final horario in horarios) {
+          // Buscar horários de hoje E de amanhã (para cobrir virada de dia)
+          final horariosHoje = med.horariosDodia();
+          final horariosAmanha = med.horariosAmanha();
+          final todosHorarios = [...horariosHoje, ...horariosAmanha];
+
+          for (final horario in todosHorarios) {
             // Ignora se já foi tomada
             if (doseService.foiTomada(med.id, horario)) continue;
 
             final diffMinutes = horario.difference(now).inMinutes;
-            if (diffMinutes >= 0 && diffMinutes <= 30) {
+
+            if (diffMinutes >= 0 && diffMinutes <= 14) {
               upcoming.add({'med': med, 'horario': horario});
             } else if (diffMinutes < 0 &&
                 now.difference(horario).inMinutes <= 30) {
