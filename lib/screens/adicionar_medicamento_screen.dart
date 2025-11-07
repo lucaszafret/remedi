@@ -106,7 +106,7 @@ class _AdicionarMedicamentoScreenState
 
           // SECTION: INFORMAÇÕES BÁSICAS
           _buildSectionTitle('Informações Básicas', Icons.info_outline),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _buildTextField(
             controller: _nomeController,
             label: 'Nome do medicamento',
@@ -119,212 +119,198 @@ class _AdicionarMedicamentoScreenState
               return null;
             },
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: _buildTextField(
-                  controller: _dosagemController,
-                  label: 'Dosagem',
-                  hint: 'Ex: 500mg',
-                  icon: Icons.local_pharmacy,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Digite a dosagem';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTextField(
-                  controller: _quantidadeController,
-                  label: 'Qtd/dose',
-                  hint: 'Ex: 1',
-                  icon: Icons.format_list_numbered,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Digite';
-                    }
-                    final quantidade = int.tryParse(value);
-                    if (quantidade == null || quantidade <= 0) {
-                      return 'Inválido';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ],
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _dosagemController,
+            label: 'Dosagem',
+            hint: 'Ex: 500mg',
+            icon: Icons.local_pharmacy,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Digite a dosagem';
+              }
+              return null;
+            },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _quantidadeController,
+            label: 'Quantidade por dose',
+            hint: 'Ex: 1',
+            icon: Icons.format_list_numbered,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            suffixText: 'comprimido(s)',
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Digite a quantidade';
+              }
+              final quantidade = int.tryParse(value);
+              if (quantidade == null || quantidade <= 0) {
+                return 'Digite um número válido';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
           _buildTextField(
             controller: _intervaloController,
-            label: 'Intervalo entre doses (horas)',
-            hint: 'Ex: 8 (de 8 em 8 horas)',
+            label: 'Intervalo entre doses',
+            hint: 'Ex: 8',
             icon: Icons.access_time,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            suffixText: 'horas',
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Digite o intervalo';
               }
               final intervalo = int.tryParse(value);
               if (intervalo == null || intervalo <= 0 || intervalo > 24) {
-                return 'Digite um intervalo entre 1 e 24 horas';
+                return 'Entre 1 e 24 horas';
               }
               return null;
             },
           ),
+          if (_intervaloController.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    _getTextoDosesAPorDia(),
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
 
           // SECTION: INÍCIO DO TRATAMENTO
           _buildSectionTitle('Início do Tratamento', Icons.event_available),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                InkWell(
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
                   onTap: _selecionarData,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.calendar_month,
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Data de início',
-                                style: TextStyle(
-                                  color: AppColors.textLight,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Data',
+                              style: TextStyle(
+                                color: AppColors.textLight,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${_dataHoraInicio.day.toString().padLeft(2, '0')}/${_dataHoraInicio.month.toString().padLeft(2, '0')}/${_dataHoraInicio.year}',
-                                style: const TextStyle(
-                                  color: AppColors.text,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: AppColors.textLight,
+                        const SizedBox(height: 8),
+                        Text(
+                          '${_dataHoraInicio.day.toString().padLeft(2, '0')}/${_dataHoraInicio.month.toString().padLeft(2, '0')}/${_dataHoraInicio.year}',
+                          style: const TextStyle(
+                            color: AppColors.text,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                Divider(height: 1, color: AppColors.textLight.withValues(alpha: 0.1)),
-                InkWell(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
                   onTap: _selecionarHorario,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                  borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.access_time,
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Horário da primeira dose',
-                                style: TextStyle(
-                                  color: AppColors.textLight,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Horário',
+                              style: TextStyle(
+                                color: AppColors.textLight,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${_dataHoraInicio.hour.toString().padLeft(2, '0')}:${_dataHoraInicio.minute.toString().padLeft(2, '0')}',
-                                style: const TextStyle(
-                                  color: AppColors.text,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: AppColors.textLight,
+                        const SizedBox(height: 8),
+                        Text(
+                          '${_dataHoraInicio.hour.toString().padLeft(2, '0')}:${_dataHoraInicio.minute.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            color: AppColors.text,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
 
           // SECTION: DURAÇÃO DO TRATAMENTO
           _buildSectionTitle('Duração do Tratamento', Icons.timeline),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,23 +414,53 @@ class _AdicionarMedicamentoScreenState
                   if (_diasTratamentoController.text.isNotEmpty && _intervaloController.text.isNotEmpty && _quantidadeController.text.isNotEmpty)
                     Container(
                       margin: const EdgeInsets.only(top: 12),
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.1),
+                            AppColors.primary.withValues(alpha: 0.05),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, color: AppColors.primary, size: 18),
-                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.calculate, color: AppColors.primary, size: 18),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              _getTextoCalculoDias(),
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Cálculo automático',
+                                  style: TextStyle(
+                                    color: AppColors.textLight,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _getTextoCalculoDias(),
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -504,23 +520,53 @@ class _AdicionarMedicamentoScreenState
                   if (_quantidadeTotalController.text.isNotEmpty && _intervaloController.text.isNotEmpty && _quantidadeController.text.isNotEmpty)
                     Container(
                       margin: const EdgeInsets.only(top: 12),
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.1),
+                            AppColors.primary.withValues(alpha: 0.05),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, color: AppColors.primary, size: 18),
-                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.calculate, color: AppColors.primary, size: 18),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              _getTextoCalculoQuantidade(),
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Cálculo automático',
+                                  style: TextStyle(
+                                    color: AppColors.textLight,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _getTextoCalculoQuantidade(),
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -532,35 +578,46 @@ class _AdicionarMedicamentoScreenState
           ),
 
           const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: _salvar,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 0,
-              shadowColor: AppColors.primary.withValues(alpha: 0.3),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(_isEdicao ? Icons.check_circle : Icons.add_circle, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  _isEdicao ? 'Atualizar Medicamento' : 'Adicionar Medicamento',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
+            child: ElevatedButton(
+              onPressed: _salvar,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(_isEdicao ? Icons.check_circle : Icons.add_circle, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    _isEdicao ? 'Atualizar Medicamento' : 'Adicionar Medicamento',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -652,6 +709,7 @@ class _AdicionarMedicamentoScreenState
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    String? suffixText,
   }) {
     return TextFormField(
       controller: controller,
@@ -666,6 +724,12 @@ class _AdicionarMedicamentoScreenState
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon, color: AppColors.primary),
+        suffixText: suffixText,
+        suffixStyle: TextStyle(
+          color: AppColors.textLight,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
@@ -693,6 +757,18 @@ class _AdicionarMedicamentoScreenState
       ),
       validator: validator,
     );
+  }
+
+  String _getTextoDosesAPorDia() {
+    final intervalo = int.tryParse(_intervaloController.text);
+    if (intervalo == null || intervalo <= 0) return '';
+
+    final dosesHorasPorDia = 24 / intervalo;
+    if (dosesHorasPorDia == dosesHorasPorDia.toInt()) {
+      return '${dosesHorasPorDia.toInt()} doses por dia';
+    } else {
+      return '~${dosesHorasPorDia.toStringAsFixed(1)} doses por dia';
+    }
   }
 
   void _calcularQuantidadePorDias() {
