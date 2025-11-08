@@ -8,6 +8,8 @@
 [![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://www.android.com)
 
+### 🌐 [Testar o App Online](https://remedi.lucaszafret.com.br/)
+
 </div>
 
 ---
@@ -103,7 +105,7 @@ flutter build apk --release
 
 ## 📄 Licença
 
-Este projeto está publicado na playstore sob direitos de Lucas Zafret, não publique o app novamente.
+Este projeto está sob direitos de Lucas Zafret, não publique o app na playstore.
 
 ---
 
